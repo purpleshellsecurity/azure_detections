@@ -1,0 +1,31 @@
+resource alertRule 'Microsoft.OperationalInsights/workspaces/providers/alertRules@2023-02-01-preview' = {
+  name: 'RareCountryLogon'
+  parent: workspace
+  kind: 'Scheduled'
+  properties: {
+    displayName: 'User logon from rare country'
+    description: 'Detects user sign-ins from countries not commonly seen in the environment.'
+    severity: 'Medium'
+    enabled: true
+    query: '''
+      SigninLogs
+      | summarize count() by UserPrincipalName, LocationDetails.countryOrRegion
+      | join kind=inner (
+          SigninLogs
+          | summarize baseline = count() by LocationDetails.countryOrRegion
+          | where baseline < 3
+      ) on LocationDetails_countryOrRegion
+    '''
+    queryFrequency: 'PT1H'
+    queryPeriod: 'PT1H'
+    triggerOperator: 'GreaterThan'
+    triggerThreshold: 0
+    tactics: [
+      'InitialAccess'
+    ]
+    techniques: [
+      'T1078'
+    ]
+    suppressionEnabled: false
+  }
+}

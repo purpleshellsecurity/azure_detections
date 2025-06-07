@@ -1,0 +1,27 @@
+resource alertRule 'Microsoft.OperationalInsights/workspaces/providers/alertRules@2023-02-01-preview' = {
+  name: 'HighVolumeDNS'
+  parent: workspace
+  kind: 'Scheduled'
+  properties: {
+    displayName: 'High Volume DNS Queries from Single Host'
+    description: 'May indicate beaconing or DNS tunneling behavior.'
+    severity: 'Medium'
+    enabled: true
+    query: '''
+      DnsEvents
+      | summarize Count = count() by bin(TimeGenerated, 5m), Computer
+      | where Count > 100
+    '''
+    queryFrequency: 'PT1H'
+    queryPeriod: 'PT1H'
+    triggerOperator: 'GreaterThan'
+    triggerThreshold: 0
+    tactics: [
+      'CommandAndControl'
+    ]
+    techniques: [
+      'T1071.004'
+    ]
+    suppressionEnabled: false
+  }
+}
